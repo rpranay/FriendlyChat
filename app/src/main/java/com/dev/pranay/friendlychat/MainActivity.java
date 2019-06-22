@@ -1,6 +1,7 @@
 package com.dev.pranay.friendlychat;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -19,6 +20,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -26,6 +29,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
     public static final int MESSAGE_LENGTH_LIMIT = 1000;
     public static final int MESSAGE_RESOURCE = R.layout.each_message;
     public static final int RC_SIGN_IN = 1;
+    public static final int RC_PHOTO_PICKER = 2;
 
     private static final String TAG = "MainActivity";
     private ListView messagesListView;
@@ -52,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
     private ChildEventListener childEventListener;
     private FirebaseAuth firebaseAuth;
     private FirebaseAuth.AuthStateListener authStateListener;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference chatPhotoReference;
+    private UploadTask uploadTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +72,9 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
 
         firebaseDatabase = FirebaseDatabase.getInstance();
         firebaseAuth = FirebaseAuth.getInstance();
+        firebaseStorage = FirebaseStorage.getInstance();
         messagesDatabaseReference = firebaseDatabase.getReference().child("messages");
+        chatPhotoReference = firebaseStorage.getReference().child("chat_photos");
 
         messagesListView = findViewById(R.id.lvMessages);
         addImageButton = findViewById(R.id.ibAddImage);
@@ -122,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
     @Override
     protected void onPause() {
         super.onPause();
-        if(authStateListener != null){
+        if (authStateListener != null) {
             firebaseAuth.removeAuthStateListener(authStateListener);
         }
         messsageAdapter.clear();
@@ -163,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
     }
 
     public void detachDatabaseReadListener() {
-        if(childEventListener != null){
+        if (childEventListener != null) {
             messagesDatabaseReference.removeEventListener(childEventListener);
             childEventListener = null;
         }
@@ -207,6 +219,10 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
                 messageEditText.getText().clear();
                 break;
             case R.id.ibAddImage:
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/jpeg");
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(Intent.createChooser(intent, "Complete action using"), RC_PHOTO_PICKER);
                 break;
             default:
                 break;
@@ -216,10 +232,33 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == RC_SIGN_IN){
-            if(resultCode == RESULT_CANCELED){
-                finish();
-            }
+        switch (requestCode) {
+            case RC_SIGN_IN:
+                if (resultCode == RESULT_CANCELED)
+                    finish();
+                break;
+            case RC_PHOTO_PICKER:
+                if (resultCode == RESULT_OK) {
+                    final Uri selectedImageUri = data.getData();
+                    final StorageReference selectedImageReference = chatPhotoReference.child(selectedImageUri.getLastPathSegment());
+                    selectedImageReference.putFile(selectedImageUri)
+                            .addOnSuccessListener(this, new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            selectedImageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    Message message = new Message(null, username, uri.toString());
+                                    messagesDatabaseReference.push().setValue(message);
+
+                                }
+                            });
+                        }
+                    });
+                }
+                break;
+            default:
+                break;
         }
     }
 

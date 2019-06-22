@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.util.List;
 
 public class MesssageAdapter extends ArrayAdapter<Message> {
@@ -51,8 +53,18 @@ public class MesssageAdapter extends ArrayAdapter<Message> {
             viewHolder = (ViewHolder) view.getTag();
         }
 
+        if(message.getImageUrl() != null){
+            viewHolder.image.setVisibility(View.VISIBLE);
+            viewHolder.text.setVisibility(View.GONE);
+            Glide.with(viewHolder.image.getContext())
+                    .load(message.getImageUrl())
+                    .into(viewHolder.image);
+        }else{
+            viewHolder.image.setVisibility(View.GONE);
+            viewHolder.text.setVisibility(View.VISIBLE);
+            viewHolder.text.setText(message.getText());
+        }
         //viewHolder.image.setImageBitmap(message.getImageUrl());
-        viewHolder.text.setText(message.getText());
         viewHolder.name.setText(message.getUser());
 
         return view;
