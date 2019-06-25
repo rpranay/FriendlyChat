@@ -3,29 +3,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#d3d3d3"
+    android:background="#000000"
     tools:context=".MainActivity">
 
     <ListView
         android:id="@+id/lvMessages"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="10sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="50dp"
+        android:layout_marginBottom="60dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
         android:stackFromBottom="true" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:paddingBottom="10dp"
         android:layout_alignParentBottom="true"
         android:background="#ffffff"
         android:orientation="horizontal"
         android:scrollbars="vertical">
 
         <ImageButton
+            android:layout_margin="3dp"
+            android:background="@color/colorAccent"
             android:id="@+id/ibAddImage"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:src="@drawable/image_add" />
 
@@ -37,6 +44,9 @@
 
         <Button
             android:id="@+id/bSend"
+            android:textColor="#ffffff"
+            android:layout_margin="3dp"
+            android:background="@color/colorAccent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"

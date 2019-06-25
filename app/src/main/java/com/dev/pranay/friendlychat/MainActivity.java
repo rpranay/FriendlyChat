@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -248,6 +249,7 @@ public class MainActivity extends AppCompatActivity implements TextWatcher, View
                             selectedImageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
+                                    Toast.makeText(MainActivity.this, uri.toString(), Toast.LENGTH_LONG).show();
                                     Message message = new Message(null, username, uri.toString());
                                     messagesDatabaseReference.push().setValue(message);
 
